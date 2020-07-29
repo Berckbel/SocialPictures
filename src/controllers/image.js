@@ -5,7 +5,7 @@ ctrl.index = (req, res)=>{
 };
 
 ctrl.create = (req, res)=>{
-    res.send('Create page');
+    res.send('Works');
 };
 
 ctrl.like = (req, res)=>{
