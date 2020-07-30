@@ -6,8 +6,24 @@ const { Image } = require('../models');
 
 const ctrl = {};
 
-ctrl.index = (req, res) => {
-    res.send('Index page');
+ctrl.index = async (req, res) => {
+    await Image.findOne({ filename: { $regex: req.params.image_id } }).then(
+        documento => {
+            const contexto = {
+                image: {
+                    id: documento._id,
+                    views: documento.views,
+                    likes: documento.likes,
+                    title: documento.title,
+                    filename: documento.filename,
+                    description: documento.description,
+                    timestamp: documento.timestamp,
+                    uniqueId: documento.uniqueId
+                }
+            }
+            res.render('image', { image: contexto.image })
+        }
+    );
 };
 
 ctrl.create = (req, res) => {
@@ -31,7 +47,7 @@ ctrl.create = (req, res) => {
                     description: req.body.description,
                 });
                 const imageSaved = await newImg.save();
-                res.send('works!!');
+                res.redirect('/images/' + imgUrl);
             } else {
                 await fs.unlink(imageTempPath);
                 res.status(500).json({ error: 'Only Images are allowed' });
@@ -48,7 +64,8 @@ ctrl.like = (req, res) => {
 };
 
 ctrl.comment = (req, res) => {
-    res.send('Comment page');
+    console.log(req.body);
+    res.send('comentario');
 };
 
 ctrl.remove = (req, res) => {

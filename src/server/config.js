@@ -39,7 +39,7 @@ module.exports = app =>{
     routes(app);
 
     //static files
-    app.use('/public',express.static(path.join(__dirname, '../public')));
+    app.use('/public', express.static(path.join(__dirname, '../public')));
 
     //errorhandlers
     if('development' === app.get('env')){
