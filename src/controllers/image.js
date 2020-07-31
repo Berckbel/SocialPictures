@@ -8,9 +8,9 @@ const { Image, Comment } = require('../models');
 const ctrl = {};
 
 ctrl.index = async (req, res) => {
-    await Image.findOne({ filename: { $regex: req.params.image_id } }).then(
+    const contexto = await Image.findOne({ filename: { $regex: req.params.image_id } }).then(
         documento => {
-            const contexto = {
+            return {
                 image: {
                     id: documento._id,
                     views: documento.views,
@@ -22,9 +22,11 @@ ctrl.index = async (req, res) => {
                     uniqueId: documento.uniqueId
                 }
             }
-            res.render('image', { image: contexto.image })
         }
     );
+    const comments = await Comment.find({image_id: contexto.image.id}).lean();
+    res.render('image', { image: contexto.image, comments: comments });
+
 };
 
 ctrl.create = (req, res) => {
