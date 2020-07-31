@@ -4,6 +4,7 @@ const fs = require('fs-extra');
 const md5 = require('md5');
 
 const { Image, Comment } = require('../models');
+const { json } = require('express');
 
 const ctrl = {};
 
@@ -29,7 +30,7 @@ ctrl.index = async (req, res) => {
                 }
             }
         );
-        
+
         image.views = image.views + 1;
         viewModel.image = contexto.image
         image.save();
@@ -79,13 +80,13 @@ ctrl.create = (req, res) => {
 };
 
 ctrl.like = async (req, res) => {
-    const image = await Image.findOne({filename: {$regex: req.params.image_id}});
-    if(image){
+    const image = await Image.findOne({ filename: { $regex: req.params.image_id } });
+    if (image) {
         image.likes = image.likes + 1;
         await image.save();
-        res.json({likes: image.likes});
-    }else{
-        res.status(500).json({error: 'Internal Error'});
+        res.json({ likes: image.likes });
+    } else {
+        res.status(500).json({ error: 'Internal Error' });
     }
 };
 
@@ -97,13 +98,19 @@ ctrl.comment = async (req, res) => {
         newComment.image_id = image._id;
         await newComment.save();
         res.redirect('/images/' + image.uniqueId);
-    }else{
+    } else {
         res.redirect('/');
     }
 };
 
-ctrl.remove = (req, res) => {
-    res.send('Remove page');
+ctrl.remove = async (req, res) => {
+    const image = await Image.findOne({filename: {$regex: req.params.image_id}});
+    if(image){
+        await fs.unlink(path.resolve('./src/public/upload/' + image.filename));
+        await Comment.deleteOne({image_id: image._id});
+        await image.remove();
+        res.json(true);
+    }
 };
 
 module.exports = ctrl;
