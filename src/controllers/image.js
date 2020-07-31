@@ -8,24 +8,40 @@ const { Image, Comment } = require('../models');
 const ctrl = {};
 
 ctrl.index = async (req, res) => {
-    const contexto = await Image.findOne({ filename: { $regex: req.params.image_id } }).then(
-        documento => {
-            return {
-                image: {
-                    id: documento._id,
-                    views: documento.views,
-                    likes: documento.likes,
-                    title: documento.title,
-                    filename: documento.filename,
-                    description: documento.description,
-                    timestamp: documento.timestamp,
-                    uniqueId: documento.uniqueId
+
+    const viewModel = { image: {}, comments: {} };
+
+    const image = await Image.findOne({ filename: { $regex: req.params.image_id } });
+    if (image) {
+        const contexto = await Image.findOne({ filename: { $regex: req.params.image_id } }).then(
+            documento => {
+                return {
+                    image: {
+                        id: documento._id,
+                        views: documento.views,
+                        likes: documento.likes,
+                        title: documento.title,
+                        filename: documento.filename,
+                        description: documento.description,
+                        timestamp: documento.timestamp,
+                        uniqueId: documento.uniqueId
+                    }
                 }
             }
-        }
-    );
-    const comments = await Comment.find({image_id: contexto.image.id}).lean();
-    res.render('image', { image: contexto.image, comments: comments });
+        );
+        
+        image.views = image.views + 1;
+        viewModel.image = contexto.image
+        image.save();
+
+        const comments = await Comment.find({ image_id: contexto.image.id }).lean();
+        viewModel.comments = comments
+
+        res.render('image', viewModel);
+
+    } else {
+        res.redirect('/');
+    }
 
 };
 
@@ -74,6 +90,8 @@ ctrl.comment = async (req, res) => {
         newComment.image_id = image._id;
         await newComment.save();
         res.redirect('/images/' + image.uniqueId);
+    }else{
+        res.redirect('/');
     }
 };
 
